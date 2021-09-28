@@ -1,1 +1,1 @@
-export {default} from './ProxySandbox';
+export {default} from './proxy-sandbox';
