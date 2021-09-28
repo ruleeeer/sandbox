@@ -4,6 +4,8 @@ module.exports = {
   rootDir: __dirname,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   clearMocks: true,
+  coverageDirectory: "coverage",
+  testEnvironment: 'jsdom',
   globals: {
     'ts-jest': {
       noUnusedLocals: true,

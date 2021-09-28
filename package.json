@@ -13,7 +13,8 @@
     "format": "prettier -w .",
     "lint": "eslint src/*/{src,types}/**",
     "lint:fix": "eslint --fix",
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "test": "jest --coverage --env ./src/__test__/test-env.js"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^8.2.5",
@@ -21,6 +22,8 @@
     "eslint": "^7.32.0",
     "eslint-plugin-node": "^11.1.0",
     "jest": "^27.0.6",
+    "jest-environment-jsdom": "^27.2.3",
+    "jsdom": "^17.0.0",
     "lint-staged": "^11.1.1",
     "prettier": "^2.3.2",
     "rimraf": "^3.0.2",
