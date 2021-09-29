@@ -1,42 +1,52 @@
-import ProxySandbox from "../proxy-sandbox";
-
+import ProxySandbox from '../proxy-sandbox'
 
 test('please activate the sandbox before using it', () => {
-    // @ts-ignore
-    const proxyWindow: any = new ProxySandbox({id: 'test', rawWindow: window}).proxyWindow;
-    expect(() => proxyWindow.a = 1).toThrow(TypeError)
+  const sandbox = new ProxySandbox({ id: 'test', rawWindow: window })
+  const proxyWindow: any = sandbox.proxy
+  expect(() => (proxyWindow.a = 1)).toThrow(TypeError)
 })
-
 
 test('Properties restored after reactivating the sandbox', () => {
-    // @ts-ignore
-    const sandbox = new ProxySandbox({id: 'test', rawWindow: window});
-    sandbox.active();
-    let proxyWindow = sandbox.proxy;
-    // @ts-ignore
-    proxyWindow.b = 1;
-    sandbox.inActive();
+  const sandbox = new ProxySandbox({ id: 'test', rawWindow: window })
+  sandbox.active()
+  const proxyWindow: any = sandbox.proxy
+  proxyWindow.b = 1
+  sandbox.inActive()
 
-    sandbox.active();
-    // @ts-ignore
-    expect(proxyWindow.b).toEqual(1)
+  sandbox.active()
+  expect(proxyWindow.b).toEqual(1)
+  sandbox.inActive()
 })
 
-test('Use id to restore sandbox',()=>{
+test('Use id to restore sandbox', () => {
+  const sandbox = new ProxySandbox({ id: 'test', rawWindow: window })
+  sandbox.active()
+  const proxyWindow: any = sandbox.proxy
+  proxyWindow.a = 1
+  sandbox.inActive()
 
-    // @ts-ignore
-    const sandbox = new ProxySandbox({id: 'test', rawWindow: window});
-    sandbox.active();
-    let proxyWindow = sandbox.proxy;
-    // @ts-ignore
-    proxyWindow.a = 1;
-    sandbox.inActive();
-
-//    new sandbox but id is same
-    const sameSandbox=  new ProxySandbox({id:'test'});
-    sameSandbox.active();
-    let sameProxyWindow = sameSandbox.proxy;
-    // @ts-ignore
-    expect(sameProxyWindow.a).toEqual(1);
+  //    new sandbox but id is same
+  const sameSandbox = new ProxySandbox({ id: 'test' })
+  sameSandbox.active()
+  const sameProxyWindow: any = sameSandbox.proxy
+  expect(sameProxyWindow.a).toEqual(1)
+  sandbox.inActive()
+  sameSandbox.inActive()
 })
 
+test('record the active sandbox count', () => {
+  const sandboxOne = new ProxySandbox()
+  const sandboxTwo = new ProxySandbox()
+  expect(sandboxOne.activeCount).toEqual(0)
+  expect(sandboxTwo.activeCount).toEqual(0)
+  sandboxOne.active()
+  expect(sandboxOne.activeCount).toEqual(1)
+  expect(sandboxTwo.activeCount).toEqual(1)
+  sandboxTwo.active()
+  expect(sandboxOne.activeCount).toEqual(2)
+  expect(sandboxTwo.activeCount).toEqual(2)
+  sandboxOne.inActive()
+  expect(sandboxOne.activeCount).toEqual(1)
+  expect(sandboxTwo.activeCount).toEqual(1)
+  sandboxTwo.inActive()
+})
