@@ -1,24 +1,20 @@
 declare module '@originjs/sandbox' {
+  interface SandboxParamInterface {
+    escapeReadable?: Set<PropertyKey>
+    escapeWriteable?: Set<PropertyKey>
+    rawWindow?: Window
+    id?: string
+  }
 
+  interface SandboxInterface {
+    get isActive(): boolean
 
-    interface SandboxParamInterface {
-        escapeReadable?: Set<PropertyKey>
-        escapeWriteable?: Set<PropertyKey>
-        rawWindow?: Window
-        id?: string
-    }
+    get id(): string
 
-    interface SandboxInterface {
+    get proxy(): Window
 
-        get isActive(): boolean;
+    activate(): void
 
-        get id(): string;
-
-        get proxy(): Window;
-
-        active(): void;
-
-        inActive(): void;
-    }
-
+    deactivate(): void
+  }
 }

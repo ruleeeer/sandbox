@@ -8,30 +8,30 @@ test('please activate the sandbox before using it', () => {
 
 test('Properties restored after reactivating the sandbox', () => {
   const sandbox = new ProxySandbox({ id: 'test', rawWindow: window })
-  sandbox.active()
+  sandbox.activate()
   const proxyWindow: any = sandbox.proxy
   proxyWindow.b = 1
-  sandbox.inActive()
+  sandbox.deactivate()
 
-  sandbox.active()
+  sandbox.activate()
   expect(proxyWindow.b).toEqual(1)
-  sandbox.inActive()
+  sandbox.deactivate()
 })
 
 test('Use id to restore sandbox', () => {
   const sandbox = new ProxySandbox({ id: 'test', rawWindow: window })
-  sandbox.active()
+  sandbox.activate()
   const proxyWindow: any = sandbox.proxy
   proxyWindow.a = 1
-  sandbox.inActive()
+  sandbox.deactivate()
 
   //    new sandbox but id is same
   const sameSandbox = new ProxySandbox({ id: 'test' })
-  sameSandbox.active()
+  sameSandbox.activate()
   const sameProxyWindow: any = sameSandbox.proxy
   expect(sameProxyWindow.a).toEqual(1)
-  sandbox.inActive()
-  sameSandbox.inActive()
+  sandbox.deactivate()
+  sameSandbox.deactivate()
 })
 
 test('record the active sandbox count', () => {
@@ -39,14 +39,14 @@ test('record the active sandbox count', () => {
   const sandboxTwo = new ProxySandbox()
   expect(sandboxOne.activeCount).toEqual(0)
   expect(sandboxTwo.activeCount).toEqual(0)
-  sandboxOne.active()
+  sandboxOne.activate()
   expect(sandboxOne.activeCount).toEqual(1)
   expect(sandboxTwo.activeCount).toEqual(1)
-  sandboxTwo.active()
+  sandboxTwo.activate()
   expect(sandboxOne.activeCount).toEqual(2)
   expect(sandboxTwo.activeCount).toEqual(2)
-  sandboxOne.inActive()
+  sandboxOne.deactivate()
   expect(sandboxOne.activeCount).toEqual(1)
   expect(sandboxTwo.activeCount).toEqual(1)
-  sandboxTwo.inActive()
+  sandboxTwo.deactivate()
 })

@@ -56,7 +56,7 @@ export default class ProxySandbox extends Sandbox implements SandboxInterface {
     return this.#proxy
   }
 
-  active(): void {
+  activate(): void {
     if (!this.#isActive) {
       if (this.#id) {
         //    try to recovery form previous sandbox
@@ -72,7 +72,7 @@ export default class ProxySandbox extends Sandbox implements SandboxInterface {
     }
   }
 
-  inActive(): void {
+  deactivate(): void {
     if (this.#isActive) {
       if (this.#id) {
         Sandbox._id2Sandbox.set(this.#id, this)
