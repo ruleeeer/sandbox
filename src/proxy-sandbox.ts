@@ -1,27 +1,40 @@
-import { SandboxInterface, SandboxParamInterface } from '@originjs/sandbox'
-import { Sandbox } from './sandbox'
+import { AbstractSandbox } from './abstract-sandbox'
+import { SandboxParamInterface } from '@originjs/sandbox'
 
-export default class ProxySandbox extends Sandbox implements SandboxInterface {
-  readonly #id: string
-  #isActive = false
-  readonly #proxy: Window
-  readonly #rawWindow: Window
-  #fakeWindow: Window = Object.create(null)
-  readonly #escapeReadable: Set<PropertyKey>
-  readonly #escapeWritable: Set<PropertyKey>
+export default class ProxySandbox extends AbstractSandbox {
+  protected _id: string
+  protected _isActive: any
+  protected _proxy: Window
+  protected _rawWindow: Window
+  protected _fakeWindow: Window = Object.create(null)
+  protected _escapeReadable: Set<PropertyKey> = new Set<PropertyKey>()
+  protected _escapeWritable: Set<PropertyKey> = new Set<PropertyKey>()
 
   constructor(param?: SandboxParamInterface) {
     super()
-    this.#escapeReadable = param?.escapeReadable ?? new Set<PropertyKey>()
-    this.#escapeWritable = param?.escapeWriteable ?? new Set<PropertyKey>()
-    this.#rawWindow = param?.rawWindow ?? window
-    this.#id = param?.id ?? ''
-    this.#proxy = new Proxy(this.#fakeWindow, {
-      set: (_: Window, prop: string | symbol, value: any) => {
-        if (this.#isActive) {
-          Reflect.set(this.#fakeWindow, prop, value)
-          if (this.#escapeWritable.has(prop)) {
-            Reflect.set(this.#rawWindow, prop, value)
+    param?.escapeReadable
+      ? param.escapeReadable.forEach((v) => this._escapeReadable.add(v))
+      : void 0
+    param?.escapeWriteable
+      ? param.escapeWriteable.forEach((v) => this._escapeWritable.add(v))
+      : void 0
+    this._rawWindow = param?.rawWindow ?? window
+    this._id = param?.id ?? ''
+    // restore _fakeWindow from previous same id sandbox
+    if (this._id) {
+      const previousSandbox = AbstractSandbox._id2Sandbox.get(this._id)
+      if (previousSandbox) {
+        this._fakeWindow = (previousSandbox as ProxySandbox)._fakeWindow
+      } else {
+        AbstractSandbox._id2Sandbox.set(this._id, this)
+      }
+    }
+    this._proxy = new Proxy(this._fakeWindow, {
+      set: (target: Window, prop: string | symbol, value: any) => {
+        if (this._isActive) {
+          Reflect.set(target, prop, value)
+          if (this._escapeWritable.has(prop)) {
+            Reflect.set(this._rawWindow, prop, value)
           }
           return true
         } else {
@@ -29,56 +42,65 @@ export default class ProxySandbox extends Sandbox implements SandboxInterface {
           return false
         }
       },
-      get: (_: Window, prop: string | symbol) => {
-        if (this.#isActive) {
-          if (Reflect.has(this.#fakeWindow, prop)) {
-            return Reflect.get(this.#fakeWindow, prop)
-          } else if (this.#escapeReadable.has(prop)) {
-            return Reflect.get(this.#rawWindow, prop)
+      get: (target: Window, prop: string | symbol) => {
+        if (this._isActive) {
+          if (Reflect.has(target, prop)) {
+            return Reflect.get(target, prop)
+          } else if (this._escapeReadable.has(prop)) {
+            return Reflect.get(this._rawWindow, prop)
           }
         } else {
           console.warn('Please activate the sandbox before using it')
         }
         return undefined
+      },
+      has: (target: Window, prop: string | symbol) => {
+        return (
+          Reflect.has(target, prop) ||
+          (this._escapeReadable.has(prop) && Reflect.has(this._rawWindow, prop))
+        )
+      },
+      deleteProperty: (target: Window, prop: string | symbol) => {
+        return (
+          Reflect.deleteProperty(target, prop) &&
+          (this._escapeWritable.has(prop)
+            ? Reflect.deleteProperty(this._rawWindow, prop)
+            : true)
+        )
+      },
+      ownKeys: (target: Window) => {
+        return Array.from(
+          new Set(
+            Reflect.ownKeys(target).concat(Reflect.ownKeys(this._rawWindow))
+          )
+        )
       }
     })
   }
 
   get isActive(): boolean {
-    return this.#isActive
+    return this._isActive
   }
 
   get id(): string {
-    return this.#id
+    return this._id
   }
 
   get proxy(): Window {
-    return this.#proxy
+    return this._proxy
   }
 
   activate(): void {
-    if (!this.#isActive) {
-      if (this.#id) {
-        //    try to recovery form previous sandbox
-        const previousSandbox = ProxySandbox._id2Sandbox.get(this.#id)
-        if (previousSandbox) {
-          this.#fakeWindow = previousSandbox.#fakeWindow
-        } else {
-          Sandbox._id2Sandbox.set(this.#id, this)
-        }
-      }
-      this.#isActive = true
-      Sandbox._activeCount++
+    if (!this._isActive) {
+      this._isActive = true
+      AbstractSandbox._activeCount++
     }
   }
 
   deactivate(): void {
-    if (this.#isActive) {
-      if (this.#id) {
-        Sandbox._id2Sandbox.set(this.#id, this)
-      }
-      this.#isActive = false
-      Sandbox._activeCount--
+    if (this._isActive) {
+      this._isActive = false
+      AbstractSandbox._activeCount--
     }
   }
 }
