@@ -61,19 +61,44 @@ export default class ProxySandbox extends AbstractSandbox {
         )
       },
       deleteProperty: (target: Window, prop: string | symbol) => {
-        return (
-          Reflect.deleteProperty(target, prop) &&
-          (this._escapeWritable.has(prop)
-            ? Reflect.deleteProperty(this._rawWindow, prop)
-            : true)
-        )
+        if (this._isActive) {
+          return (
+            Reflect.deleteProperty(target, prop) &&
+            (this._escapeWritable.has(prop)
+              ? Reflect.deleteProperty(this._rawWindow, prop)
+              : true)
+          )
+        } else {
+          console.warn('Please activate the sandbox before using it')
+          return false
+        }
       },
       ownKeys: (target: Window) => {
-        return Array.from(
-          new Set(
-            Reflect.ownKeys(target).concat(Reflect.ownKeys(this._rawWindow))
-          )
-        )
+        return Reflect.ownKeys(target).concat(Reflect.ownKeys(this._rawWindow))
+      },
+      defineProperty: (
+        target: Window,
+        prop: string | symbol,
+        attributes: PropertyDescriptor
+      ) => {
+        if (this._isActive) {
+          Reflect.set(target, prop, attributes)
+          if (this._escapeWritable.has(prop)) {
+            Reflect.set(this._rawWindow, prop, attributes)
+          }
+          return true
+        } else {
+          console.warn('Please activate the sandbox before using it')
+          return false
+        }
+      },
+      getOwnPropertyDescriptor: (target: Window, prop: string | symbol) => {
+        if (Reflect.has(target, prop)) {
+          return Reflect.getOwnPropertyDescriptor(target, prop)
+        } else if (this._escapeReadable.has(prop)) {
+          return Reflect.getOwnPropertyDescriptor(this._rawWindow, prop)
+        }
+        return undefined
       }
     })
   }
