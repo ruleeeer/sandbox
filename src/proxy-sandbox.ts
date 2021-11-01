@@ -44,6 +44,7 @@ export default class ProxySandbox extends AbstractSandbox {
       },
       get: (target: Window, prop: string | symbol) => {
         if (this._isActive) {
+          console.log('get.......')
           if (Reflect.has(target, prop)) {
             return Reflect.get(target, prop)
           } else if (this._escapeReadable.has(prop)) {
@@ -126,6 +127,19 @@ export default class ProxySandbox extends AbstractSandbox {
     if (this._isActive) {
       this._isActive = false
       AbstractSandbox._activeCount--
+    }
+  }
+
+  executeJS(src: string): void {
+    if (this._isActive) {
+      Function('window', 'self', 'globalThis', `with(window){${src}}`).call(
+        this._proxy,
+        this._proxy,
+        this._proxy,
+        this._proxy
+      )
+    } else {
+      console.warn('Please activate the sandbox before using it')
     }
   }
 }

@@ -16,6 +16,8 @@ export abstract class AbstractSandbox {
     return AbstractSandbox._activeCount
   }
 
+  abstract executeJS(src: string): void
+
   abstract get isActive(): boolean
 
   abstract get id(): string

@@ -86,3 +86,12 @@ test('deleteProperty test', () => {
   expect((sandbox as any)['_fakeWindow']['__test__']).toEqual(undefined)
   expect((sandbox as any)['_rawWindow']['__test__']).toEqual(undefined)
 })
+
+test('executeJS', () => {
+  const sandbox = new ProxySandbox({ escapeWriteable: ['__test__'] })
+  sandbox.activate()
+  const code = `var a = 1;console.log(a)`
+  sandbox.executeJS(code)
+  console.log('fake===' + (sandbox as any)['_fakeWindow']['a'])
+  console.log('raw===' + (sandbox as any)['_rawWindow']['a'])
+})
